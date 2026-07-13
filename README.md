@@ -1,41 +1,24 @@
 # Wedding POS Terminal
 
-A fake payment terminal that demands an absurd sum before it will "approve" a
-transaction — built on a Raspberry Pi Zero WH, sealed in a custom 3D-printed
-case, and powered by a pocket power bank.
+A fake payment terminal that demands an absurd sum before it'll approve anything. Built on a Raspberry Pi Zero WH, sealed in a 3D-printed case, runs off a pocket power bank.
 
-It was a wedding prank: before the groom could "collect" the bride, he had to
-tap a card and pay. The terminal beeps, shows a very official *CONTACTING BANK…*
-progress bar, thinks hard for a few seconds, then flashes **PAYMENT APPROVED**
-with a custom message. No money moves. No network is involved. It's pure
-theatre — a self-contained prop that looks and sounds exactly like the real
-thing.
+The setup: before the groom could collect the bride, he had to tap a card and pay. The terminal beeps, shows a very official *CONTACTING BANK...* progress bar, thinks hard for a few seconds, then flashes PAYMENT APPROVED with a custom message. No money moves. No network needed. Just a self-contained prop that looks and sounds like the real thing.
 
-![The finished terminal](images/product/oled.jpg)
+<img src="images/build/15_finished.jpg" width="500" alt="The finished terminal">
 
 ---
 
 ## What it does
 
-The whole experience is one clean loop, no operator required:
+One loop, no operator required:
 
 ```
-idle screen  →  tap card  →  "Card detected!"  →  processing animation  →  APPROVED  →  back to idle
+idle  →  tap card  →  "Card detected!"  →  processing animation  →  APPROVED  →  back to idle
 ```
 
-- **Idle:** the OLED shows the amount due (default `10,000.00 EUR`) and *TAP CARD
-  TO PAY*.
-- **Tap:** an RFID card enters the reader's field. Short confirmation beep, then
-  *Card detected! / Authorising…*
-- **Processing:** a *CONTACTING BANK…* screen with animated dots and a filling
-  progress bar — the part that sells it.
-- **Approved:** a double-then-long success beep, a boxed **APPROVED** screen, and
-  your custom two-line message.
-- Then it quietly returns to idle, ready for the next mark.
+On idle the OLED shows the amount due and *TAP CARD TO PAY*. Tap any 13.56 MHz card or fob and it beeps once, shows a fake authorising screen, then runs a *CONTACTING BANK...* animation with a filling progress bar for a few seconds. That's the part that sells it. Then it beeps approval (three rising tones) and shows APPROVED with your custom message before looping back, ready for the next mark.
 
-Any 13.56 MHz card or fob triggers it — the code detects a card in the field
-rather than validating a specific UID, so a hotel key card works just as well as
-the bundled fobs.
+The code detects card presence rather than matching a UID, so a hotel key card works as well as the bundled fobs.
 
 ---
 
@@ -43,69 +26,56 @@ the bundled fobs.
 
 | Part | Role |
 |------|------|
-| Raspberry Pi Zero WH | Brains — runs the Python app headless |
+| Raspberry Pi Zero WH | Runs the Python app headless |
 | SSD1306 0.96" OLED (I2C) | The terminal display |
-| RC522 RFID reader (SPI) | Detects the card tap |
-| Active buzzer | The beeps |
-| 3× tactile buttons | Decorative — present on the case, ignored in code |
-| USB power bank + inline-switch cable | All-day, cable-free power |
+| RC522 RFID reader (SPI) | Card detection |
+| Active buzzer | Sound effects |
+| 3x tactile buttons | Decorative (on the case, not wired to any behavior) |
+| USB power bank + inline-switch cable | All-day power, no wall outlet needed |
 
-Full parts list with prices in **[hardware/bom.md](hardware/bom.md)**.
+Full parts list with prices: [hardware/bom.md](hardware/bom.md).
 
 ---
 
 ## Wiring
 
-Seven components share the 40-pin header across I2C, SPI, and plain GPIO. The
-one thing you must not get wrong: **the RC522 is a 3.3V part — 5V will kill it.**
+Seven components share the 40-pin header across I2C, SPI, and GPIO. One thing not to get wrong: the RC522 is a 3.3V part. 5V will kill it.
 
-Full pin table lives in **[docs/setup.md](docs/setup.md)**; the visual version is
-**[hardware/wiring_diagram.svg](hardware/wiring_diagram.svg)**.
+Pin table is in [docs/setup.md](docs/setup.md); the visual version is [hardware/wiring_diagram.svg](hardware/wiring_diagram.svg).
 
-![Wiring the Pi](images/build/11_wiring_pi_overview.jpg)
+<img src="images/build/11_wiring_pi_overview.jpg" width="500" alt="Wiring the Pi">
 
 ---
 
 ## The enclosure
 
-The case is a parametric **OpenSCAD** design, printed in black PLA on an FDM
-printer. It's three separate parts, each exported to its own STL:
+The case is a parametric OpenSCAD design, printed in black PLA. Three separate parts, each exported to its own STL:
 
-1. **Main shell** — front face with the OLED window, an engraved *TAP CARD HERE*
-   zone with an NFC-style ripple symbol, three button holes, and a side USB slot.
-2. **Back lid** — snap-in rear cover with a cutout for the power cable.
-3. **Button caps** (×3) — printed individually with different engraved labels.
+1. Main shell: front face with the OLED window, an engraved TAP CARD HERE zone with an NFC-style ripple symbol, three button holes, and a side USB slot.
+2. Back lid: snap-in rear cover with a cutout for the power cable.
+3. Button caps (x3): printed with different engraved labels.
 
-Because every dimension is a named variable at the top of the file, the whole
-box re-sizes cleanly if you swap a module or change wall thickness. Source:
-**[hardware/pos_terminal_case.scad](hardware/pos_terminal_case.scad)**.
+Every dimension is a named variable at the top of the file, so the whole thing resizes cleanly if you swap a module or change wall thickness. Source: [hardware/pos_terminal_case.scad](hardware/pos_terminal_case.scad).
 
-> **On the buttons:** in the final build the button caps are a design feature,
-> not a mechanism — there are no return springs behind them, so they don't
-> actuate. That was a deliberate call: the prank runs fully automatically, so
-> the buttons only need to *look* like a card terminal. A small
-> [retainer disc](hardware/button_retainer.scad) keeps each cap from falling out
-> the front.
+On the buttons: the caps are a design feature, not a mechanism. No return springs, so they don't actuate. The prank runs fully automatically anyway, so they only need to look the part. A small [retainer disc](hardware/button_retainer.scad) keeps each cap from falling through the front face.
 
-![Inside the finished case](images/build/14_pos_inside.jpg)
+<img src="images/build/14_pos_inside.jpg" width="500" alt="Inside the finished case">
 
 ---
 
 ## Software
 
-Runs headless on **Raspberry Pi OS Lite**. Quick version:
+Runs headless on Raspberry Pi OS Lite. Quick version:
 
-1. Flash OS Lite, enable SSH + WiFi in the imager.
-2. `raspi-config` → enable **SPI** and **I2C**.
-3. `pip install luma.oled mfrc522 RPi.GPIO spidev`.
-4. Drop `pos_terminal.py` on the Pi, edit the config block (amount, currency,
-   messages).
-5. Auto-start it with a `@reboot` crontab entry.
+1. Flash OS Lite, enable SSH and WiFi in the imager.
+2. `raspi-config` to enable SPI and I2C.
+3. `pip install luma.oled mfrc522 RPi.GPIO spidev`
+4. Drop `pos_terminal.py` on the Pi, edit the config block.
+5. Add a `@reboot` crontab entry for autostart.
 
-Full walkthrough — flashing, headless config, wiring, autostart — in
-**[docs/setup.md](docs/setup.md)**.
+Full walkthrough (flashing, headless config, wiring, autostart) in [docs/setup.md](docs/setup.md).
 
-Everything the user personalises is at the top of the script:
+The only things to personalise are at the top of the script:
 
 ```python
 AMOUNT          = "10,000.00"
@@ -119,63 +89,44 @@ PROCESSING_SECS = 4
 
 ## Build process
 
-The project went from "wouldn't it be funny if…" to a working prop in a handful
-of evenings:
+The project went from "wouldn't it be funny if..." to a working prop in a handful of evenings.
 
-**1. Research & parts.** Figured out the display, reader, and buzzer that would
-play nicely with a Pi Zero, then ordered them.
+**Research and parts.** Figured out which display, reader, and buzzer would work with a Pi Zero, then ordered them.
 
-![Components](images/product/rc522.jpg)
+<img src="images/product/rc522.jpg" width="400" alt="RC522 RFID reader">
 
-**2. Soldering.** The RC522 ships with a loose header strip — soldered it on so
-it could take jumper wires.
+**Soldering.** The RC522 ships with a loose header strip. Soldered it on so it could take jumper wires.
 
-![Soldered RC522 header](images/build/01_soldering_result.jpg)
+<img src="images/build/01_soldering_result.jpg" width="400" alt="Soldered RC522 header">
 
-**3. Wiring.** Connected all seven components to the 40-pin header — OLED on I2C,
-RC522 on SPI, buzzer and buttons on GPIO — and checked each subsystem as I went.
+**Wiring.** Connected all seven components to the 40-pin header: OLED on I2C, RC522 on SPI, buzzer and buttons on GPIO. Tested each subsystem as I went.
 
-![Midway progress check](images/build/02_midway_progress.jpg)
-![OLED and reader working on the bench](images/build/13_working_test.jpg)
+<img src="images/build/02_midway_progress.jpg" width="400" alt="Midway wiring check">
+<img src="images/build/13_working_test.jpg" width="400" alt="OLED and reader working on the bench">
 
-**4. Modeling the case.** Designed the enclosure parametrically in OpenSCAD,
-measuring each module so the internal cavities actually fit.
+**Modeling the case.** Designed the enclosure in OpenSCAD, measuring each module so the internal cavities actually fit.
 
-**5. Printing.** FDM printed in black PLA, face-down, and dialed in the tolerances
-on the OLED window and button holes.
+**Printing.** FDM printed in black PLA, face-down, and iterated on the OLED window and button hole sizes until the tolerances were right.
 
-**6. Assembly.** Everything folded into the shell — Pi, reader behind the *TAP
-CARD* zone, OLED in its window, buzzer, power bank cable out the bottom.
+**Assembly.** Everything folded into the shell: Pi, reader behind the TAP CARD zone, OLED in its window, buzzer, power bank cable out the bottom.
 
-![Case interior during assembly](images/build/08_case_inside.jpg)
+<img src="images/build/08_case_inside.jpg" width="400" alt="Case interior during assembly">
 
-**7. It worked.** Powered from a bank, booted, tapped a card — beep, animation,
-**APPROVED**.
+**Done.** Powered from a bank, booted, tapped a card: beep, animation, APPROVED.
 
-![Finished terminal](images/build/15_finished.jpg)
+<img src="images/build/15_finished.jpg" width="500" alt="Finished terminal">
 
 ---
 
-## Tech highlights / what I learned
+## What I learned
 
-- **I2C OLED rendering** with `luma.oled` — driving an SSD1306 frame-by-frame via
-  its `canvas` context, laying out text and shapes within 128×64 pixels (and
-  fixing a real overflow bug by splitting the amount onto its own line).
-- **SPI RFID** with the `mfrc522` library — bringing up the reader on the SPI bus
-  and detecting card presence reliably.
-- **Non-blocking card detection.** `SimpleMFRC522.read()` blocks until a card
-  arrives, which would freeze the idle animation. Instead the main loop polls the
-  underlying reader directly with `MFRC522_Request(PICC_REQIDL)` and only advances
-  when a card is actually in the field — so the UI stays responsive.
-- **GPIO buzzer** timing — composing distinct beep patterns (tap vs. approval)
-  from simple HIGH/LOW pulses.
-- **Headless Raspberry Pi** setup — imager pre-config, SSH, enabling SPI/I2C,
-  and `@reboot` cron autostart (learning the hard way that `rc.local` is gone on
-  Bookworm).
-- **Parametric 3D modeling** in OpenSCAD — driving the whole enclosure from named
-  variables, and building an NFC ripple symbol out of arc primitives.
-- **FDM printing tolerances** — getting press-fit windows and button holes to the
-  right size after accounting for how the printer over-extrudes on small holes.
+- **I2C OLED rendering** with `luma.oled`: driving an SSD1306 frame-by-frame via its canvas context, laying out text and shapes within 128x64 pixels. Hit a real overflow bug where the amount string was ~137px wide on the 128px screen; fixed it by putting the amount on its own line.
+- **SPI RFID** with `mfrc522`: bringing up the RC522 on the SPI bus and detecting card presence.
+- **Non-blocking card detection.** `SimpleMFRC522.read()` blocks until a card arrives, which freezes the idle screen. The main loop instead polls the underlying reader with `MFRC522_Request(PICC_REQIDL)` and only advances when a card is actually in the field.
+- **GPIO buzzer timing**: distinct beep patterns (tap vs. approval) from plain HIGH/LOW pulses.
+- **Headless Pi setup**: imager pre-config, SSH, enabling SPI/I2C, and `@reboot` cron autostart. Learned the hard way that `rc.local` doesn't exist on Pi OS Bookworm.
+- **Parametric OpenSCAD**: driving the whole enclosure from named variables and building an NFC ripple symbol from arc primitives.
+- **FDM tolerances**: getting press-fit windows and button holes right after accounting for how the printer over-extrudes on small features.
 
 ---
 
@@ -183,23 +134,23 @@ CARD* zone, OLED in its window, buzzer, power bank cable out the bottom.
 
 ```
 wedding-pos-terminal/
-├── pos_terminal.py            # the application
+├── pos_terminal.py
 ├── README.md
 ├── LICENSE
 ├── docs/
-│   └── setup.md               # full build + install guide
+│   └── setup.md
 ├── hardware/
-│   ├── bom.md                 # bill of materials
-│   ├── wiring_diagram.svg     # pin-by-pin wiring
-│   ├── pos_terminal_case.scad # parametric enclosure (3 parts)
-│   └── button_retainer.scad   # button cap retainer discs
+│   ├── bom.md
+│   ├── wiring_diagram.svg
+│   ├── pos_terminal_case.scad
+│   └── button_retainer.scad
 └── images/
-    ├── build/                 # build-process photos
-    └── product/               # component / product shots
+    ├── build/
+    └── product/
 ```
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Do fun things with it. No real payments, please.
+MIT. See [LICENSE](LICENSE). Do fun things with it.
