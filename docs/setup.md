@@ -2,7 +2,7 @@
 
 End-to-end setup for the POS terminal, from a blank SD card to a device that
 auto-starts on boot. Assumes you know your way around a terminal and have used
-a Raspberry Pi before — no hand-holding, but nothing skipped either.
+a Raspberry Pi before. No hand-holding, but nothing skipped either.
 
 ---
 
@@ -13,7 +13,7 @@ a Raspberry Pi before — no hand-holding, but nothing skipped either.
 - The components from the [Bill of Materials](../hardware/bom.md), wired per the
   table below
 - A computer with the Raspberry Pi Imager installed
-- Your WiFi credentials (2.4 GHz — the Zero W has no 5 GHz radio)
+- Your WiFi credentials (2.4 GHz; the Zero W has no 5 GHz radio)
 
 ---
 
@@ -21,8 +21,8 @@ a Raspberry Pi before — no hand-holding, but nothing skipped either.
 
 Use **Raspberry Pi Imager**.
 
-1. Choose OS → **Raspberry Pi OS Lite (32-bit)**. No desktop needed — this is
-   headless.
+1. Choose OS → **Raspberry Pi OS Lite (32-bit)**. No desktop needed, since this
+   is headless.
 2. Click the gear / **Edit Settings** before writing and set:
    - Hostname: `weddingpos` (optional)
    - Enable **SSH** → use password authentication (or drop in your public key)
@@ -31,7 +31,8 @@ Use **Raspberry Pi Imager**.
    - Set locale / timezone
 3. Write to the card, then eject and boot the Pi.
 
-Give it ~60–90 seconds on first boot to expand the filesystem and join WiFi.
+Give it about 60 to 90 seconds on first boot to expand the filesystem and join
+WiFi.
 
 ---
 
@@ -45,7 +46,7 @@ ssh pi@<pi-ip-address>
 
 > **Windows note:** `weddingpos.local` only resolves if Apple Bonjour / mDNS is
 > installed (it ships with iTunes and a few other apps). If `ssh pi@weddingpos.local`
-> hangs, don't fight it — grab the IP from your router and SSH to that instead.
+> hangs, don't fight it. Grab the IP from your router and SSH to that instead.
 
 Once in, enable the two buses the hardware needs:
 
@@ -70,7 +71,6 @@ i2cdetect -y 1        # OLED should appear at address 0x3C
 ```bash
 sudo apt update
 sudo apt install -y python3-pip python3-dev git
-
 # On Bookworm you may need --break-system-packages, or use a venv
 pip3 install luma.oled mfrc522 RPi.GPIO spidev
 ```
@@ -82,7 +82,7 @@ SPI; `RPi.GPIO` runs the buzzer.
 
 ## 5. Wiring
 
-Power everything off before wiring. Double-check the RC522 voltage — **3.3V, not 5V.**
+Power everything off before wiring. Double-check the RC522 voltage: 3.3V, not 5V.
 
 | Component | Pin | Notes |
 |-----------|-----|-------|
@@ -90,7 +90,7 @@ Power everything off before wiring. Double-check the RC522 voltage — **3.3V, n
 | OLED GND | Pin 6 (GND) | |
 | OLED SDA | Pin 3 (GPIO 2) | |
 | OLED SCL | Pin 5 (GPIO 3) | |
-| RC522 VCC | Pin 17 (3.3V) | NOT 5V — will damage it |
+| RC522 VCC | Pin 17 (3.3V) | NOT 5V, will damage it |
 | RC522 GND | Pin 25 (GND) | |
 | RC522 RST | Pin 22 (GPIO 25) | |
 | RC522 SDA/CS | Pin 24 (GPIO 8) | |
@@ -102,7 +102,7 @@ Power everything off before wiring. Double-check the RC522 voltage — **3.3V, n
 | Buzzer I/O | Pin 11 (GPIO 17) | |
 
 The three buttons on the front of the case are wired (GPIO 23 / 24 / 27 to GND)
-but the script never reads them — they're purely a physical design detail. Skip
+but the script never reads them. They're purely a physical design detail. Skip
 them if you like.
 
 See [../hardware/wiring_diagram.svg](../hardware/wiring_diagram.svg) for the
@@ -135,13 +135,13 @@ python3 /home/pi/pos_terminal.py
 ```
 
 You should get the splash screen, then the idle "TAP CARD TO PAY" screen. Tap a
-card — it should run the animation and approve. `Ctrl+C` to stop.
+card and it should run the animation and approve. `Ctrl+C` to stop.
 
 ---
 
 ## 7. Auto-start on boot
 
-Raspberry Pi OS Bookworm has **no `/etc/rc.local`**, so use cron. Edit the crontab:
+Raspberry Pi OS Bookworm has no `/etc/rc.local`, so use cron. Edit the crontab:
 
 ```bash
 crontab -e
@@ -167,12 +167,12 @@ Check `/home/pi/pos.log` if anything looks off.
 ## 8. Day-of usage
 
 1. Plug the Pi into the power bank via the inline-switch cable.
-2. Flick the switch on **~2 minutes before** you need it — that covers boot plus
+2. Flick the switch on about 2 minutes before you need it. That covers boot plus
    the cron `sleep`.
 3. When the OLED shows **TAP CARD TO PAY**, you're live.
-4. Tap **any** 13.56 MHz card or fob against the front panel. The device beeps,
+4. Tap any 13.56 MHz card or fob against the front panel. The device beeps,
    plays the "contacting bank" animation, then shows **APPROVED**.
-5. It returns to idle automatically — no buttons, no operator. Tap again to
-   repeat.
+5. It returns to idle automatically, with no buttons and no operator. Tap again
+   to repeat.
 
 That's it. No internet, no real transaction, just very convincing theatre.
